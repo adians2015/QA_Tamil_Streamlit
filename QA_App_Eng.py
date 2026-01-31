@@ -11,6 +11,9 @@ st.title("🗣 English Conversation Practice App")
 # Load Excel
 df = pd.read_excel("conversation_data1.xlsx")
 
+# Clean column names (avoids hidden space issues)
+df.columns = df.columns.str.strip()
+
 # ---------- SESSION STATE ----------
 if "index" not in st.session_state:
     st.session_state.index = 0
@@ -76,19 +79,21 @@ st.subheader(f"📝 {topic} – Question {row['Serial']}")
 
 # -------- QUESTION --------
 st.markdown("### ❓ Question")
-st.info(row["Question"])
-st.markdown(f"🗣 **Pronounce:** {row['Question_Pronounce']}")
-st.markdown(f"🌐 **Meaning:** {row['Question_Translation']}")
+st.info(row.get("Question", ""))
+st.markdown(f"🗣 **Pronounce:** {row.get('Question_Pronounce', '')}")
+st.markdown(f"🌐 **Meaning:** {row.get('Question_Translation', '')}")
 
 # -------- ANSWER --------
 st.markdown("### ✅ Sample Answer")
-st.success(row["Answer"])
-st.markdown(f"🗣 **Pronounce:** {row['Answer_Pronounce']}")
-st.markdown(f"🌐 **Meaning:** {row['Answer_Translation']}")
+st.success(row.get("Answer", ""))
+st.markdown(f"🗣 **Pronounce:** {row.get('Answer_Pronounce', '')}")
+st.markdown(f"🌐 **Meaning:** {row.get('Answer_Translation', '')}")
 
-# ---------- TEXT TO SPEECH ----------
+# ---------- TEXT TO SPEECH (INDIAN ACCENT) ----------
 def speak_js(text):
-    tts = gTTS(text)
+    if not text:
+        return
+    tts = gTTS(text, lang="hi", slow=False)  # ✅ Indian accent
     audio_bytes = BytesIO()
     tts.write_to_fp(audio_bytes)
     audio_bytes.seek(0)
@@ -108,11 +113,11 @@ if st.session_state.spoken_key != current_key and st.session_state.current_mode 
     st.session_state.spoken_key = current_key
 
     if st.session_state.current_mode == "Ask Question":
-        speak_js(row["Question"])
+        speak_js(row.get("Question_Pronounce", row.get("Question", "")))
 
     elif st.session_state.current_mode == "Answer Practice":
         time.sleep(st.session_state.answer_delay)
-        speak_js(row["Answer"])
+        speak_js(row.get("Answer_Pronounce", row.get("Answer", "")))
 
 st.divider()
 
